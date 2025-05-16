@@ -1,5 +1,7 @@
 import copy
+
 import numpy as np
+import scipy.interpolate as interp
 import matplotlib.pyplot as plt
 
 
@@ -11,6 +13,13 @@ class SimulationResult:
 
 
     def include(self, time: list[float], state: list[int]):
+        if len(self.results) != 0:
+            ref_time_start = self.results[0][0][0]
+            ref_time_end = self.results[0][0][-1]
+
+            if time[0] != ref_time_start or time[-1] != ref_time_end:
+                raise ValueError('New results are not compatible with previous ones')
+
         self.results.append([time.copy(), state.copy()])
 
 
@@ -31,4 +40,8 @@ class SimulationResult:
         ax.set_xticks(state_values, state_ids)
         
         fig.savefig(path, bbox_inches = 'tight')
+
+
+    def plot_probabilities(self, path: str, num_points: int = 1000):
+        pass
 
