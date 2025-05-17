@@ -1,4 +1,4 @@
-class StateDatabase:
+class StateSet:
 
     def __init__(self):
         self.state_to_value = {}
@@ -22,18 +22,21 @@ class StateDatabase:
             self.__add(id, value)
 
         else:
-            values = self.value_to_state.keys().sort()
-
-            if values[0] > 0:
+            if len(self.state_to_value) == 0:
                 self.__add(id, 0)
-                return
+            else:
+                values = sorted(self.value_to_state.keys())
 
-            for i in range(len(values) - 1):
-                if values[i + 1] > values[i] + 1:
-                    self.__add(id, values[i] + 1)
+                if values[0] > 0:
+                    self.__add(id, 0)
                     return
 
-            self.__add(id, values[-1] + 1)
+                for i in range(len(values) - 1):
+                    if values[i + 1] > values[i] + 1:
+                        self.__add(id, values[i] + 1)
+                        return
+
+                self.__add(id, values[-1] + 1)
 
 
     def __add(self, id: str, value: int):
@@ -52,7 +55,7 @@ class StateDatabase:
         if value not in self.value_to_state:
             raise ValueError(f'There is no state with value {value}')
 
-        return self.state_to_value[id]
+        return self.value_to_state[value]
 
 
     def get_all_ids(self) -> list[str]:

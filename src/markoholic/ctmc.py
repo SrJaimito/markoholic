@@ -1,6 +1,6 @@
-from state_database import StateDatabase
-from transition_database import TransitionDatabase
-from simulation_results import SimulationResult
+from .state_set import StateSet
+from .transition_set import TransitionSet
+from .simulation_result import SimulationResult
 
 import numpy.random as rng
 
@@ -8,25 +8,25 @@ import numpy.random as rng
 class CTMC:
 
     def __init__(self):
-        self.states = StateDatabase()
+        self.states = StateSet()
         self.transitions = None
 
 
-    def add_state(id: str, value: int = None):
+    def add_state(self, id: str, value: int = None):
         self.states.add(id, value)
 
 
-    def define_transition(origin: str, destiny: str, rate: float):
+    def define_transition(self, origin: str, destiny: str, rate: float):
         if self.transitions is None:
             if self.states.is_empty():
                 return Exception('No states defined')
 
-            self.transitions = TransitionDatabase(self.states)
+            self.transitions = TransitionSet(self.states)
 
         self.transitions.add(origin, destiny, rate)
 
 
-    def modify_transition(origin: str, destiny: str, rate: float):
+    def modify_transition(self, origin: str, destiny: str, rate: float):
         if self.transitions is None:
             raise Exception('There are no transitions defined')
 
@@ -46,15 +46,19 @@ class CTMC:
             raise ValueError('Number of iterations must be possitive')
 
         result = SimulationResult(self.states)
+        initial_state_value = self.states.get_value_of(initial_state)
 
         for _ in range(iterations):
             current_time = time_start
-            current_state = self.states.get_value_of(initial_state)
+            current_state = initial_state_value
 
-            time = [current_time]
-            state = [current_state]
+            time = []
+            state = []
 
             while current_time < time_end:
+                time.append(current_time)
+                state.append(current_state)
+
                 available_transitions = self.transitions.get_transitions_from(current_state)
 
                 if len(available_transitions) == 0:
@@ -72,10 +76,7 @@ class CTMC:
                 delta_time_index = transition_times.index(delta_time)
 
                 current_time += delta_time
-                current_state = available_transitions[i][0]
-
-                time.append(current_time)
-                state.append(current_state)
+                current_state = available_transitions[delta_time_index][0]
 
             time.append(time_end)
             state.append(state[-1])

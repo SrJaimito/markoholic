@@ -1,9 +1,11 @@
 import copy
 
+from .state_set import StateSet
 
-class TransitionDatabase:
 
-    def __init__(self, state_info: StateDatabase):
+class TransitionSet:
+
+    def __init__(self, state_info: StateSet):
         self.state_info = state_info
 
         if self.state_info.is_empty():
@@ -25,7 +27,7 @@ class TransitionDatabase:
             raise ValueError('Self loops are not allowed')
 
         origin_value = self.state_info.get_value_of(origin)
-        destination_value = self.state_info.get_value_of(destiny)
+        destination_value = self.state_info.get_value_of(destination)
 
         defined_transitions = [t[0] for t in self.transitions[origin_value]]
 
