@@ -34,7 +34,7 @@ class SimulationResult:
 
         fig = plt.figure()
 
-        plt.step(self.results[index][0], self.results[index][1], where = 'post', **kwargs)
+        plt.step(self.results[index][0], self.results[index][1], where = 'post')
 
         plt.xlabel('Time')
         plt.ylabel('State')
@@ -80,7 +80,7 @@ class SimulationResult:
         defined_states = sorted(self.state_info.get_all_values())
         for i in range(len(defined_states)):
             label = self.state_info.get_id_of(defined_states[i])
-            plt.plot(time_grid, probabilities[:, i], label = label, **kwargs)
+            line, = plt.plot(time_grid, probabilities[:, i], label = label)
 
         plt.xlabel('Time')
         plt.ylabel('Probability')
