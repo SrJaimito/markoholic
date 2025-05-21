@@ -1,6 +1,6 @@
 import copy
 
-from .state_set import StateSet
+from markoholic.chains.state_set import StateSet
 
 
 class TransitionSet:

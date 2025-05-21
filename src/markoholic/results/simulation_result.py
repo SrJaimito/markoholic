@@ -4,7 +4,7 @@ import numpy as np
 import scipy.interpolate as interp
 import matplotlib.pyplot as plt
 
-from .state_set import StateSet
+from markoholic.chains.state_set import StateSet
 
 
 class SimulationResult:
@@ -14,15 +14,19 @@ class SimulationResult:
         self.results = []
 
 
-    def include(self, time: list[float], state: list[int]):
+    def include(self, time: list[float], state: list[int], failure_times: list[float]):
         if len(self.results) != 0:
-            ref_time_start = self.results[0][0][0]
-            ref_time_end = self.results[0][0][-1]
+            ref_time_start = self.results[0]['time'][0]
+            ref_time_end = self.results[0]['time'][-1]
 
             if time[0] != ref_time_start or time[-1] != ref_time_end:
                 raise ValueError('New results are not compatible with previous ones')
 
-        self.results.append([time.copy(), state.copy()])
+        self.results.append({
+            'time': time.copy(),
+            'state': state.copy(),
+            'failure_times': failure_times.copy()
+        })
 
 
     def plot_state(self, index: int = -1, **kwargs):
@@ -34,7 +38,7 @@ class SimulationResult:
 
         fig = plt.figure()
 
-        plt.step(self.results[index][0], self.results[index][1], where = 'post')
+        plt.step(self.results[index]['time'], self.results[index]['state'], where = 'post')
 
         plt.xlabel('Time')
         plt.ylabel('State')
@@ -52,18 +56,18 @@ class SimulationResult:
     def plot_probabilities(self, steps: int = 1000, **kwargs):
         encoding = self.__one_hot_encoding()
 
-        time_start = self.results[0][0][0]
-        time_end = self.results[0][0][-1]
+        time_start = self.results[0]['time'][0]
+        time_end = self.results[0]['time'][-1]
 
         time_grid = np.linspace(time_start, time_end, steps + 1)
         states = []
 
         for result in self.results:
             interpolator = interp.interp1d(
-                result[0], result[1],
+                result['time'], result['state'],
                 kind = 'previous',
                 bounds_error = False,
-                fill_value = (result[1][0], result[1][-1])
+                fill_value = (result['state'][0], result['state'][-1])
             )
             
             interp_states = interpolator(time_grid)
