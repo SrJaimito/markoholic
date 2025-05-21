@@ -11,26 +11,31 @@ class SimulationResult:
 
     def __init__(self, state_info: StateSet):
         self.state_info = state_info
-        self.results = []
+        self.results = {
+            'evolutions': [],
+            'failure_times': []
+        }
 
 
-    def include(self, time: list[float], state: list[int], failure_times: list[float]):
-        if len(self.results) != 0:
-            ref_time_start = self.results[0]['time'][0]
-            ref_time_end = self.results[0]['time'][-1]
+    def include(self, time: list[float], state: list[int], failure_time: float):
+        if len(self.results['evolutions']) != 0:
+            ref_time_start = self.results['evolutions'][0]['time'][0]
+            ref_time_end = self.results['evolutions'][0]['time'][-1]
 
             if time[0] != ref_time_start or time[-1] != ref_time_end:
                 raise ValueError('New results are not compatible with previous ones')
 
-        self.results.append({
+        self.results['evolutions'].append({
             'time': time.copy(),
-            'state': state.copy(),
-            'failure_times': failure_times.copy()
+            'state': state.copy()
         })
+
+        if failure_time is not None:
+            self.results['failure_times'].append(failure_time)
 
 
     def plot_state(self, index: int = -1, **kwargs):
-        if len(self.results) == 0:
+        if len(self.results['evolutions']) == 0:
             raise Exception('No simulation results available')
 
         state_ids = self.state_info.get_all_ids()
@@ -38,7 +43,11 @@ class SimulationResult:
 
         fig = plt.figure()
 
-        plt.step(self.results[index]['time'], self.results[index]['state'], where = 'post')
+        plt.step(
+            self.results['evolutions'][index]['time'],
+            self.results['evolutions'][index]['state'],
+            where = 'post'
+        )
 
         plt.xlabel('Time')
         plt.ylabel('State')
@@ -56,13 +65,13 @@ class SimulationResult:
     def plot_probabilities(self, steps: int = 1000, **kwargs):
         encoding = self.__one_hot_encoding()
 
-        time_start = self.results[0]['time'][0]
-        time_end = self.results[0]['time'][-1]
+        time_start = self.results['evolutions'][0]['time'][0]
+        time_end = self.results['evolutions'][0]['time'][-1]
 
         time_grid = np.linspace(time_start, time_end, steps + 1)
         states = []
 
-        for result in self.results:
+        for result in self.results['evolutions']:
             interpolator = interp.interp1d(
                 result['time'], result['state'],
                 kind = 'previous',
@@ -77,7 +86,7 @@ class SimulationResult:
 
         states = np.array(states)
 
-        probabilities = np.sum(states, axis = 0) / len(self.results)
+        probabilities = np.sum(states, axis = 0) / len(self.results['evolutions'])
 
         fig = plt.figure()
 
@@ -87,6 +96,37 @@ class SimulationResult:
             line, = plt.plot(time_grid, probabilities[:, i], label = label)
 
         plt.ylabel('Probability')
+        plt.legend()
+
+        if 'time_units' in kwargs:
+            time_units = kwargs['time_units']
+            plt.xlabel(f'Time ({time_units})')
+        else:
+            plt.xlabel('Time')
+
+        if 'title' in kwargs:
+            plt.title(kwargs['title'])
+        
+        if 'save_path' in kwargs:
+            fig.savefig(kwargs['save_path'], bbox_inches = 'tight')
+        else:
+            plt.show()
+
+
+    def plot_failure_times(self, **kwargs):
+        if len(self.results['failure_times']) == 0:
+            raise Exception('This model never failed. Does it have absorving states?')
+
+        mean_failure_time = np.mean(self.results['failure_times'])
+
+        plt.figure()
+
+        plt.hist(self.results['failure_times'], bins = 50, edgecolor = 'black')
+
+        plt.vlines(mean_failure_time, 0, plt.gca().get_ylim()[1],
+                        color = 'red', linestyles = 'dashed', label = 'MTTF')
+
+        plt.ylabel('Number of samples')
         plt.legend()
 
         if 'time_units' in kwargs:

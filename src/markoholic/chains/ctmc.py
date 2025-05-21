@@ -54,7 +54,7 @@ class CTMC:
 
             time = []
             state = []
-            failure_times = []
+            failure_time = None
 
             while current_time < time_end:
                 time.append(current_time)
@@ -63,7 +63,7 @@ class CTMC:
                 available_transitions = self.transitions.get_transitions_from(current_state)
 
                 if len(available_transitions) == 0:
-                    failure_times.append(current_time)
+                    failure_time = current_time
                     break
 
                 transition_times = []
@@ -83,7 +83,7 @@ class CTMC:
             time.append(time_end)
             state.append(state[-1])
 
-            result.include(time, state, failure_times)
+            result.include(time, state, failure_time)
 
         return result
 
