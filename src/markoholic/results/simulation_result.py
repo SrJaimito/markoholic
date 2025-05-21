@@ -86,9 +86,14 @@ class SimulationResult:
             label = self.state_info.get_id_of(defined_states[i])
             line, = plt.plot(time_grid, probabilities[:, i], label = label)
 
-        plt.xlabel('Time')
         plt.ylabel('Probability')
         plt.legend()
+
+        if 'time_units' in kwargs:
+            time_units = kwargs['time_units']
+            plt.xlabel(f'Time ({time_units})')
+        else:
+            plt.xlabel('Time')
 
         if 'title' in kwargs:
             plt.title(kwargs['title'])
